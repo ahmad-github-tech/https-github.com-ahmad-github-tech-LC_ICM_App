@@ -1,0 +1,6 @@
+{
+  "name": "Meridian TradeFlow — LC Case Manager",
+  "description": "Enterprise Trade Finance Letter of Credit Case Manager UI integrated with IBM Case Manager, FileNet, and Custom DB fields.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

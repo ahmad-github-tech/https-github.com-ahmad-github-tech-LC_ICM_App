@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meridian TradeFlow — Operator Sign In</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #0f172a; display: grid; place-items: center; min-height: 100vh; margin: 0; }
+        .card { width: 100%; max-width: 380px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; }
+        h1 { font-size: 18px; margin: 0 0 6px; }
+        p { font-size: 12px; color: #64748b; margin: 0 0 18px; }
+        label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+        select, button { width: 100%; padding: 10px 12px; border-radius: 8px; font-size: 13px; }
+        select { border: 1px solid #cbd5e1; margin-bottom: 14px; background: #fff; }
+        button { border: 0; background: #1d4ed8; color: #fff; font-weight: 600; cursor: pointer; }
+        button:hover { background: #1e40af; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>Meridian TradeFlow</h1>
+    <p>IBM Case Manager · Letter of Credit Workbench</p>
+    <form th:action="@{/login}" method="post">
+        <label for="username">Select Operator Role</label>
+        <select id="username" name="username">
+            <option value="Ahmad Jamal">Ahmad Jamal · LC Checker</option>
+            <option value="Priya Nair">Priya Nair · LC Maker</option>
+            <option value="Rohan Mehta">Rohan Mehta · Doc Examiner</option>
+            <option value="S. Kulkarni">S. Kulkarni · Compliance</option>
+        </select>
+        <button type="submit">Sign In to Inbox</button>
+    </form>
+</div>
+</body>
+</html>

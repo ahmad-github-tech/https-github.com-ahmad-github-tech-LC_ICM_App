@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meridian TradeFlow — Backend Queue Monitor</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 24px; }
+        .wrap { max-width: 1120px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h1 { font-size: 20px; margin: 0; }
+        .meta { font-size: 12px; color: #475569; }
+        table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
+        th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+        th { background: #f1f5f9; font-weight: 600; color: #334155; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <header>
+        <div>
+            <h1>Meridian TradeFlow — ICM + MySQL Gateway</h1>
+            <div class="meta">Signed in as <strong th:text="${currentUser}">Operator</strong> · <a th:href="@{/login}">Switch Operator</a></div>
+        </div>
+        <div class="meta">REST API: <code>/api/icm/workitems</code></div>
+    </header>
+    <table>
+        <thead>
+        <tr>
+            <th>WOB</th>
+            <th>LC Reference</th>
+            <th>Process Type</th>
+            <th>Applicant</th>
+            <th>Amount</th>
+            <th>Owner</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${workItems}">
+            <td th:text="${item.wobNum}">WOB</td>
+            <td th:text="${item.lcReference}">LC</td>
+            <td th:text="${item.processType}">Process</td>
+            <td th:text="${item.applicantName}">Applicant</td>
+            <td th:text="${item.amountFormatted}">Amount</td>
+            <td th:text="${item.assignedTo}">Owner</td>
+            <td th:text="${item.status}">Status</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
