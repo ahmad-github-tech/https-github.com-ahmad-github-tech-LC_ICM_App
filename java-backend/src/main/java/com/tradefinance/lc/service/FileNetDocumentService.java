@@ -6,9 +6,12 @@ import com.tradefinance.lc.dto.IcmDtos.DocRowDto;
 import com.tradefinance.lc.dto.IcmDtos.DocSectionDto;
 import com.tradefinance.lc.dto.IcmDtos.IcmDocumentDto;
 import com.tradefinance.lc.dto.IcmDtos.UploadedDocumentDto;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -26,7 +29,7 @@ import org.springframework.stereotype.Service;
 public class FileNetDocumentService {
 
     private static final Logger log = LoggerFactory.getLogger(FileNetDocumentService.class);
-    private static final DateTimeFormatter TS_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final String TS_PATTERN = "yyyy-MM-dd HH:mm";
 
     private final FileNetProperties fileNetProps;
     private final IcmProperties icmProps;
@@ -58,13 +61,13 @@ public class FileNetDocumentService {
 
         sessionManager.validateAndPushSubject();
 
-        String now = TS_FMT.format(LocalDateTime.now());
+        String now = new SimpleDateFormat(TS_PATTERN).format(new Date());
         int index = 1;
         String caseFolderPath = fileNetProps.getCaseFolderRoot() + "/" + caseId;
 
         for (UploadedDocumentDto upload : uploads) {
             String docId = "FN-DOC-" + wid + "-" + index++;
-            String docClass = upload.getDocClass() != null && !upload.getDocClass().isBlank()
+            String docClass = upload.getDocClass() != null && !upload.getDocClass().trim().isEmpty()
                     ? upload.getDocClass()
                     : fileNetProps.getDefaultDocumentClass();
 
@@ -94,6 +97,10 @@ public class FileNetDocumentService {
             }
 
             String sizeLabel = formatBytes(upload.getSizeBytes());
+            Map<String, String> highlights = new HashMap<>();
+            highlights.put("lcReference", lcReference);
+            highlights.put("lcWid", wid);
+
             filedDocs.add(new IcmDocumentDto(
                     docId,
                     upload.getFileName(),
@@ -106,8 +113,8 @@ public class FileNetDocumentService {
                     "Pending",
                     null,
                     buildDaejaViewerUrl(docId),
-                    Map.of("lcReference", lcReference, "lcWid", wid),
-                    List.of(new DocSectionDto("FileNet CE Document Indexing", List.of(
+                    Collections.unmodifiableMap(highlights),
+                    Collections.singletonList(new DocSectionDto("FileNet CE Document Indexing", Arrays.asList(
                             new DocRowDto("FileNet Document ID", docId, null),
                             new DocRowDto("Object Store", fileNetProps.getTargetObjectStore(), null),
                             new DocRowDto("Case Folder Path", caseFolderPath, null),

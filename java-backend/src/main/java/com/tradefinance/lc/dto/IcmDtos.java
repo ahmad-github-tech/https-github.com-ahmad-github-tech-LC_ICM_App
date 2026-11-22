@@ -685,27 +685,159 @@ public class IcmDtos {
         public void setTextPreview(String textPreview) { this.textPreview = textPreview; }
     }
 
-    public record CreateCaseRequest(
-        String wid,
-        Map<String, String> fields,
-        List<UploadedDocumentDto> documents,
-        String actor
-    ) {}
+    public static class CreateCaseRequest {
+        private String wid;
+        private Map<String, String> fields;
+        private List<UploadedDocumentDto> documents;
+        private String actor;
 
-    public record SaveFieldsRequest(Map<String, String> fieldValues, String actor) {}
+        public CreateCaseRequest() {
+        }
 
-    public record CompleteStepRequest(
-        String outcome,
-        String reason,
-        Map<String, String> fieldValues,
-        String actor
-    ) {}
+        public CreateCaseRequest(
+                String wid, Map<String, String> fields, List<UploadedDocumentDto> documents, String actor) {
+            this.wid = wid;
+            this.fields = fields;
+            this.documents = documents;
+            this.actor = actor;
+        }
 
-    public record ReassignRequest(String targetUser, String actor) {}
+        public String getWid() { return wid; }
+        public void setWid(String wid) { this.wid = wid; }
+        public Map<String, String> getFields() { return fields; }
+        public void setFields(Map<String, String> fields) { this.fields = fields; }
+        public List<UploadedDocumentDto> getDocuments() { return documents; }
+        public void setDocuments(List<UploadedDocumentDto> documents) { this.documents = documents; }
+        public String getActor() { return actor; }
+        public void setActor(String actor) { this.actor = actor; }
+    }
 
-    public record DocumentStatusRequest(String verificationStatus, String discrepancyNote, String actor) {}
+    public static class SaveFieldsRequest {
+        private Map<String, String> fieldValues;
+        private String actor;
 
-    public record CommentRequest(String message, String actor, String role) {}
+        public SaveFieldsRequest() {
+        }
 
-    public record CompleteStepResponse(String completedWobNum, WorkItemDto updatedItem, WorkItemDto nextWorkItem) {}
+        public SaveFieldsRequest(Map<String, String> fieldValues, String actor) {
+            this.fieldValues = fieldValues;
+            this.actor = actor;
+        }
+
+        public Map<String, String> getFieldValues() { return fieldValues; }
+        public void setFieldValues(Map<String, String> fieldValues) { this.fieldValues = fieldValues; }
+        public String getActor() { return actor; }
+        public void setActor(String actor) { this.actor = actor; }
+    }
+
+    public static class CompleteStepRequest {
+        private String outcome;
+        private String reason;
+        private Map<String, String> fieldValues;
+        private String actor;
+
+        public CompleteStepRequest() {
+        }
+
+        public CompleteStepRequest(
+                String outcome, String reason, Map<String, String> fieldValues, String actor) {
+            this.outcome = outcome;
+            this.reason = reason;
+            this.fieldValues = fieldValues;
+            this.actor = actor;
+        }
+
+        public String getOutcome() { return outcome; }
+        public void setOutcome(String outcome) { this.outcome = outcome; }
+        public String getReason() { return reason; }
+        public void setReason(String reason) { this.reason = reason; }
+        public Map<String, String> getFieldValues() { return fieldValues; }
+        public void setFieldValues(Map<String, String> fieldValues) { this.fieldValues = fieldValues; }
+        public String getActor() { return actor; }
+        public void setActor(String actor) { this.actor = actor; }
+    }
+
+    public static class ReassignRequest {
+        private String targetUser;
+        private String actor;
+
+        public ReassignRequest() {
+        }
+
+        public ReassignRequest(String targetUser, String actor) {
+            this.targetUser = targetUser;
+            this.actor = actor;
+        }
+
+        public String getTargetUser() { return targetUser; }
+        public void setTargetUser(String targetUser) { this.targetUser = targetUser; }
+        public String getActor() { return actor; }
+        public void setActor(String actor) { this.actor = actor; }
+    }
+
+    public static class DocumentStatusRequest {
+        private String verificationStatus;
+        private String discrepancyNote;
+        private String actor;
+
+        public DocumentStatusRequest() {
+        }
+
+        public DocumentStatusRequest(String verificationStatus, String discrepancyNote, String actor) {
+            this.verificationStatus = verificationStatus;
+            this.discrepancyNote = discrepancyNote;
+            this.actor = actor;
+        }
+
+        public String getVerificationStatus() { return verificationStatus; }
+        public void setVerificationStatus(String verificationStatus) { this.verificationStatus = verificationStatus; }
+        public String getDiscrepancyNote() { return discrepancyNote; }
+        public void setDiscrepancyNote(String discrepancyNote) { this.discrepancyNote = discrepancyNote; }
+        public String getActor() { return actor; }
+        public void setActor(String actor) { this.actor = actor; }
+    }
+
+    public static class CommentRequest {
+        private String message;
+        private String actor;
+        private String role;
+
+        public CommentRequest() {
+        }
+
+        public CommentRequest(String message, String actor, String role) {
+            this.message = message;
+            this.actor = actor;
+            this.role = role;
+        }
+
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+        public String getActor() { return actor; }
+        public void setActor(String actor) { this.actor = actor; }
+        public String getRole() { return role; }
+        public void setRole(String role) { this.role = role; }
+    }
+
+    public static class CompleteStepResponse {
+        private String completedWobNum;
+        private WorkItemDto updatedItem;
+        private WorkItemDto nextWorkItem;
+
+        public CompleteStepResponse() {
+        }
+
+        public CompleteStepResponse(String completedWobNum, WorkItemDto updatedItem, WorkItemDto nextWorkItem) {
+            this.completedWobNum = completedWobNum;
+            this.updatedItem = updatedItem;
+            this.nextWorkItem = nextWorkItem;
+        }
+
+        public String getCompletedWobNum() { return completedWobNum; }
+        public void setCompletedWobNum(String completedWobNum) { this.completedWobNum = completedWobNum; }
+        public WorkItemDto getUpdatedItem() { return updatedItem; }
+        public void setUpdatedItem(WorkItemDto updatedItem) { this.updatedItem = updatedItem; }
+        public WorkItemDto getNextWorkItem() { return nextWorkItem; }
+        public void setNextWorkItem(WorkItemDto nextWorkItem) { this.nextWorkItem = nextWorkItem; }
+    }
 }

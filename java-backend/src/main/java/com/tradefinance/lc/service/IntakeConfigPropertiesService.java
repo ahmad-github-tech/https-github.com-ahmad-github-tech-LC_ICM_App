@@ -4,7 +4,7 @@ import com.tradefinance.lc.dto.IcmDtos.IntakeFieldConfigDto;
 import com.tradefinance.lc.dto.IcmDtos.IntakeRoleConfigDto;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import org.springframework.beans.factory.annotation.Value;
@@ -89,12 +89,17 @@ public class IntakeConfigPropertiesService {
     }
 
     private List<String> splitCsv(String raw) {
-        if (raw == null || raw.isBlank()) {
-            return List.of();
+        if (raw == null || raw.trim().isEmpty()) {
+            return Collections.emptyList();
         }
-        return Arrays.stream(raw.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .toList();
+        String[] parts = raw.split(",");
+        List<String> items = new ArrayList<String>();
+        for (String part : parts) {
+            String trimmed = part.trim();
+            if (!trimmed.isEmpty()) {
+                items.add(trimmed);
+            }
+        }
+        return items;
     }
 }

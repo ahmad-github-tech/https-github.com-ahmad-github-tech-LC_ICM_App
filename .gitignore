@@ -6,3 +6,13 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# STS / Eclipse & Maven build outputs (keep IDE metadata separate between STS and Kepler)
+target/
+.project
+.classpath
+.settings/
+.metadata/
+*.war
+*.jar
+!java-backend/libs/*.jar

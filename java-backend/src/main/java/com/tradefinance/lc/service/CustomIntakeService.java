@@ -9,7 +9,7 @@ import com.tradefinance.lc.model.CustomLcFieldValue;
 import com.tradefinance.lc.repository.CaseIntakeRepository;
 import com.tradefinance.lc.repository.CustomLcFieldRepository;
 import java.security.SecureRandom;
-import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,7 +99,7 @@ public class CustomIntakeService {
         record.setTargetInBasketId(roleConfig.getInBasketId());
         record.setDocumentCount(documentCount);
         record.setCreatedBy(actor);
-        record.setCreatedAt(Instant.now());
+        record.setCreatedAt(new Date());
         CaseIntakeRecord saved = caseIntakeRepository.save(record);
 
         // Persist the auto-generated WID + every CUSTOM_DB configured field into tf_lc_custom_fields
@@ -117,16 +117,17 @@ public class CustomIntakeService {
     @Transactional
     public void persistCustomDbField(
             String caseId, String lcRef, String fieldKey, String columnName, String value, String actor) {
-        CustomLcFieldValue entity = customFieldRepository
-                .findByCaseIdAndFieldKey(caseId, fieldKey)
-                .orElseGet(CustomLcFieldValue::new);
+        CustomLcFieldValue entity = customFieldRepository.findByCaseIdAndFieldKey(caseId, fieldKey);
+        if (entity == null) {
+            entity = new CustomLcFieldValue();
+        }
         entity.setCaseId(caseId);
         entity.setLcReference(lcRef);
         entity.setFieldKey(fieldKey);
         entity.setDbColumnName(columnName);
         entity.setFieldValue(value);
         entity.setUpdatedBy(actor);
-        entity.setUpdatedAt(Instant.now());
+        entity.setUpdatedAt(new Date());
         customFieldRepository.save(entity);
     }
 

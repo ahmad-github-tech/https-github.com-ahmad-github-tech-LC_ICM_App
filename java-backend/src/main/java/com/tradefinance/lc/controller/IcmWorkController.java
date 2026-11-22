@@ -80,21 +80,25 @@ public class IcmWorkController {
 
     @GetMapping("/workitems/{wobNum}")
     public ResponseEntity<WorkItemDto> getWorkItem(@PathVariable String wobNum) {
-        return gatewayService.getWorkItem(wobNum)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        WorkItemDto item = gatewayService.getWorkItem(wobNum);
+        if (item == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(item);
     }
 
     @GetMapping("/cases/{caseId}")
     public ResponseEntity<WorkItemDto> getCaseById(@PathVariable String caseId) {
-        return gatewayService.getCaseById(caseId)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        WorkItemDto item = gatewayService.getCaseById(caseId);
+        if (item == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(item);
     }
 
     @PostMapping("/workitems/{wobNum}/save")
     public WorkItemDto saveFields(@PathVariable String wobNum, @RequestBody SaveFieldsRequest request) {
-        return gatewayService.saveFields(wobNum, request.fieldValues(), request.actor());
+        return gatewayService.saveFields(wobNum, request.getFieldValues(), request.getActor());
     }
 
     @PostMapping("/workitems/{wobNum}/complete")
@@ -105,7 +109,7 @@ public class IcmWorkController {
 
     @PostMapping("/workitems/{wobNum}/reassign")
     public WorkItemDto reassign(@PathVariable String wobNum, @RequestBody ReassignRequest request) {
-        return gatewayService.reassign(wobNum, request.targetUser(), request.actor());
+        return gatewayService.reassign(wobNum, request.getTargetUser(), request.getActor());
     }
 
     @PostMapping("/cases/{caseId}/documents/{docId}/status")

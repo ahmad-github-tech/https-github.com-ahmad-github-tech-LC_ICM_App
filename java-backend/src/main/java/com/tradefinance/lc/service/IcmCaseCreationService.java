@@ -3,9 +3,7 @@ package com.tradefinance.lc.service;
 import com.tradefinance.lc.config.FileNetProperties;
 import com.tradefinance.lc.config.IcmProperties;
 import com.tradefinance.lc.dto.IcmDtos.*;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +20,7 @@ import org.springframework.stereotype.Service;
 public class IcmCaseCreationService {
 
     private static final Logger log = LoggerFactory.getLogger(IcmCaseCreationService.class);
-    private static final DateTimeFormatter TS_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final String TS_PATTERN = "yyyy-MM-dd HH:mm";
 
     private final IcmProperties icmProps;
     private final FileNetProperties fileNetProps;
@@ -37,13 +35,46 @@ public class IcmCaseCreationService {
         this.sessionManager = sessionManager;
     }
 
-    public record IcmCreationResult(
-            String wid,
-            String caseId,
-            String wobNum,
-            String lcReference,
-            WorkItemDto workItem
-    ) {}
+    public static class IcmCreationResult {
+        private final String wid;
+        private final String caseId;
+        private final String wobNum;
+        private final String lcReference;
+        private final WorkItemDto workItem;
+
+        public IcmCreationResult(
+                String wid,
+                String caseId,
+                String wobNum,
+                String lcReference,
+                WorkItemDto workItem) {
+            this.wid = wid;
+            this.caseId = caseId;
+            this.wobNum = wobNum;
+            this.lcReference = lcReference;
+            this.workItem = workItem;
+        }
+
+        public String getWid() {
+            return wid;
+        }
+
+        public String getCaseId() {
+            return caseId;
+        }
+
+        public String getWobNum() {
+            return wobNum;
+        }
+
+        public String getLcReference() {
+            return lcReference;
+        }
+
+        public WorkItemDto getWorkItem() {
+            return workItem;
+        }
+    }
 
     /**
      * IBM ICM Case Creation API Entry Point.
@@ -59,13 +90,13 @@ public class IcmCaseCreationService {
 
         sessionManager.validateAndPushSubject();
 
-        String operationType = submittedValues.getOrDefault("LC_Operation_Type", "Import LC Issuance");
-        String applicantName = submittedValues.getOrDefault("LC_Applicant_Name", "");
-        String beneficiaryName = submittedValues.getOrDefault("LC_Beneficiary_Name", "To Be Assigned");
-        String solId = submittedValues.getOrDefault("LC_SOL_ID", "0001");
-        String customerId = submittedValues.getOrDefault("LC_Customer_ID", "");
+        String operationType = getOrDefault(submittedValues, "LC_Operation_Type", "Import LC Issuance");
+        String applicantName = getOrDefault(submittedValues, "LC_Applicant_Name", "");
+        String beneficiaryName = getOrDefault(submittedValues, "LC_Beneficiary_Name", "To Be Assigned");
+        String solId = getOrDefault(submittedValues, "LC_SOL_ID", "0001");
+        String customerId = getOrDefault(submittedValues, "LC_Customer_ID", "");
 
-        String resolvedCaseType = (roleConfig.getCaseType() != null && !roleConfig.getCaseType().isBlank())
+        String resolvedCaseType = (roleConfig.getCaseType() != null && !roleConfig.getCaseType().trim().isEmpty())
                 ? roleConfig.getCaseType()
                 : icmProps.getCaseType();
 
@@ -109,7 +140,9 @@ public class IcmCaseCreationService {
                     fileNetProps.getTargetObjectStore(), roleConfig.getRoleName());
         }
 
-        String nowTs = TS_FMT.format(LocalDateTime.now());
+        Date now = new Date();
+        String nowTs = new SimpleDateFormat(TS_PATTERN).format(now);
+        String nowIso = formatIsoUtc(now);
         WorkItemDto item = new WorkItemDto();
         item.setWid(wid);
         item.setWobNum(wobNum);
@@ -119,7 +152,7 @@ public class IcmCaseCreationService {
         item.setProcessType(operationType);
         item.setSubject(operationType + " · " + applicantName + " (WID " + wid + ")");
         item.setApplicantName(applicantName);
-        item.setBeneficiaryName(beneficiaryName.isBlank() ? "Pending Maker Capture" : beneficiaryName);
+        item.setBeneficiaryName(beneficiaryName.trim().isEmpty() ? "Pending Maker Capture" : beneficiaryName);
         item.setIssuingBank("Meridian Trade Bank (SOL " + solId + ")");
         item.setAdvisingBank("To Be Designated by Maker");
         item.setCurrency("USD");
@@ -140,15 +173,15 @@ public class IcmCaseCreationService {
         item.setSanctionsStatus("Pending");
         item.setSlaRemainingMinutes(480);
         item.setSlaLabel("8h 00m left");
-        item.setCreatedAt(Instant.now().toString());
-        item.setEnteredQueueAt(Instant.now().toString());
+        item.setCreatedAt(nowIso);
+        item.setEnteredQueueAt(nowIso);
         item.setAgeingDays(0.0);
         item.setAgeingLabel("Just created");
         item.setInQueueLabel("Just created");
         item.setStatus("Pending Maker Completion");
         item.setLinkedCasesCount(0);
-        item.setStepOutcomes(List.of("Submit to 4-Eyes Checker", "Save Draft", "Refer to Sanctions / TBML"));
-        item.setStages(List.of(
+        item.setStepOutcomes(Arrays.asList("Submit to 4-Eyes Checker", "Save Draft", "Refer to Sanctions / TBML"));
+        item.setStages(Arrays.asList(
                 new WorkflowStageDto("s1", "Intake & WID (" + wid + ")", "completed", actor, nowTs),
                 new WorkflowStageDto("s2", "LC Maker Draft", "active", null, null),
                 new WorkflowStageDto("s3", "4-Eyes Checker", "pending", null, null),
@@ -161,8 +194,8 @@ public class IcmCaseCreationService {
 
         int idx = 1;
         for (IntakeFieldConfigDto cfg : schemaFields) {
-            String val = submittedValues.getOrDefault(cfg.getKey(), "");
-            boolean missingReq = cfg.isRequired() && (val == null || val.isBlank());
+            String val = getOrDefault(submittedValues, cfg.getKey(), "");
+            boolean missingReq = cfg.isRequired() && (val == null || val.trim().isEmpty());
             fields.add(buildField(
                     "f-in-" + idx++,
                     cfg.getKey(),
@@ -188,7 +221,7 @@ public class IcmCaseCreationService {
                 "ICM", "LC_ApplicantName", null, "text", applicantName, true, false, "none"));
         fields.add(buildField("f-ben", "beneficiaryName", "Beneficiary Name (59)", "01. Parties & Banking", 1, ":59:",
                 "ICM", "LC_BeneficiaryName", null, "text", beneficiaryName, true, false,
-                beneficiaryName.isBlank() ? "error" : "none"));
+                beneficiaryName.trim().isEmpty() ? "error" : "none"));
         fields.add(buildField("f-cust", "applicantCif", "Applicant CIF / Customer ID", "01. Parties & Banking", 1, null,
                 "CUSTOM_DB", null, "lc_customer_id", "text", customerId, false, false, "none"));
         fields.add(buildField("f-amt", "lcAmount", "LC Amount (32B)", "02. Credit Amount & Tenor", 2, ":32B:",
@@ -201,7 +234,7 @@ public class IcmCaseCreationService {
         item.setComments(new ArrayList<>());
         item.setTasks(new ArrayList<>());
         item.setRelatedCases(new ArrayList<>());
-        item.setAuditTrail(new ArrayList<>(List.of(
+        item.setAuditTrail(new ArrayList<>(Collections.singletonList(
                 new AuditEntryDto(
                         "a-" + System.currentTimeMillis() + "-create",
                         nowTs,
@@ -250,5 +283,18 @@ public class IcmCaseCreationService {
         f.setReadOnly(readOnly);
         f.setAttention(attention);
         return f;
+    }
+
+    private String getOrDefault(Map<String, String> map, String key, String defaultValue) {
+        if (map == null || !map.containsKey(key) || map.get(key) == null) {
+            return defaultValue;
+        }
+        return map.get(key);
+    }
+
+    private String formatIsoUtc(Date date) {
+        SimpleDateFormat isoFmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        isoFmt.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return isoFmt.format(date);
     }
 }

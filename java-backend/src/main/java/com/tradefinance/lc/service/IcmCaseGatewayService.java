@@ -3,9 +3,8 @@ package com.tradefinance.lc.service;
 import com.tradefinance.lc.config.IcmProperties;
 import com.tradefinance.lc.dto.IcmDtos.*;
 import com.tradefinance.lc.service.IcmCaseCreationService.IcmCreationResult;
-import jakarta.annotation.PostConstruct;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import javax.annotation.PostConstruct;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class IcmCaseGatewayService {
 
-    private static final DateTimeFormatter TS_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final String TS_PATTERN = "yyyy-MM-dd HH:mm";
 
     private final IcmProperties icmProps;
     private final IntakeConfigPropertiesService intakeConfigService;
@@ -81,9 +80,9 @@ public class IcmCaseGatewayService {
     public WorkItemDto createCase(CreateCaseRequest request) {
         IntakeRoleConfigDto roleConfig = intakeConfigService.getRoleConfig();
         List<IntakeFieldConfigDto> schemaFields = intakeConfigService.getIntakeFields();
-        Map<String, String> submitted = request.fields() != null ? request.fields() : Map.of();
-        String actor = (request.actor() != null && !request.actor().isBlank())
-                ? request.actor()
+        Map<String, String> submitted = request.getFields() != null ? request.getFields() : Collections.<String, String>emptyMap();
+        String actor = (request.getActor() != null && !request.getActor().trim().isEmpty())
+                ? request.getActor()
                 : roleConfig.getDefaultAssignee();
 
         // 1. Validate mandatory attributes driven dynamically by case-intake.properties
@@ -97,28 +96,28 @@ public class IcmCaseGatewayService {
             }
         }
         if (!missing.isEmpty()) {
-            throw new IllegalArgumentException("Missing mandatory intake fields: " + String.join(", ", missing));
+            throw new IllegalArgumentException("Missing mandatory intake fields: " + joinWithComma(missing));
         }
 
         // 2. Generate / validate unique 6-digit WID in CustomIntakeService
-        String wid = customIntakeService.resolveOrValidateWid(request.wid(), roleConfig.getWidDigits());
+        String wid = customIntakeService.resolveOrValidateWid(request.getWid(), roleConfig.getWidDigits());
 
         // 3. Call separate IBM ICM CaseCreation Service passing the 6-digit WID & ICM properties
         IcmCreationResult created = icmCaseCreationService.createIcmCase(
                 wid, roleConfig, schemaFields, submitted, actor);
 
         // 4. Call separate FileNet Document Service to file single or multiple uploaded documents
-        List<UploadedDocumentDto> uploads = request.documents() != null ? request.documents() : List.of();
+        List<UploadedDocumentDto> uploads = request.getDocuments() != null ? request.getDocuments() : Collections.<UploadedDocumentDto>emptyList();
         List<IcmDocumentDto> filedDocs = fileNetDocumentService.uploadAndFileDocuments(
-                wid, created.caseId(), created.lcReference(), uploads, actor);
+                wid, created.getCaseId(), created.getLcReference(), uploads, actor);
 
-        WorkItemDto workItem = created.workItem();
+        WorkItemDto workItem = created.getWorkItem();
         workItem.setDocuments(filedDocs);
 
         if (!filedDocs.isEmpty()) {
             workItem.getAuditTrail().add(0, new AuditEntryDto(
                     "a-" + System.currentTimeMillis() + "-fn",
-                    TS_FMT.format(LocalDateTime.now()),
+                    nowTimestamp(),
                     actor,
                     "FileNet Filing Agent",
                     filedDocs.size() + " Document(s) Filed into Case Folder",
@@ -129,9 +128,9 @@ public class IcmCaseGatewayService {
         // 5. Persist 6-digit WID intake header & CUSTOM_DB fields via separate CustomIntakeService
         customIntakeService.persistIntakeAndCustomFields(
                 wid,
-                created.caseId(),
-                created.wobNum(),
-                created.lcReference(),
+                created.getCaseId(),
+                created.getWobNum(),
+                created.getLcReference(),
                 roleConfig,
                 schemaFields,
                 submitted,
@@ -141,7 +140,7 @@ public class IcmCaseGatewayService {
 
         workItem.getAuditTrail().add(0, new AuditEntryDto(
                 "a-" + System.currentTimeMillis() + "-custom",
-                TS_FMT.format(LocalDateTime.now()),
+                nowTimestamp(),
                 actor,
                 "Custom DB Service",
                 "WID " + wid + " Registered in Custom MySQL DB",
@@ -157,21 +156,28 @@ public class IcmCaseGatewayService {
     }
 
     public List<WorkItemDto> getWorkItems(String inBasketId) {
-        return icmWorkQueue.values().stream()
-                .filter(w -> inBasketId == null || inBasketId.isBlank() || inBasketId.equals(w.getInBasketId()))
-                .map(this::mergeWithCustomDb)
-                .toList();
+        List<WorkItemDto> results = new ArrayList<WorkItemDto>();
+        boolean includeAll = (inBasketId == null || inBasketId.trim().isEmpty());
+        for (WorkItemDto item : icmWorkQueue.values()) {
+            if (includeAll || inBasketId.equals(item.getInBasketId())) {
+                results.add(mergeWithCustomDb(item));
+            }
+        }
+        return results;
     }
 
-    public Optional<WorkItemDto> getWorkItem(String wobNum) {
-        return Optional.ofNullable(icmWorkQueue.get(wobNum)).map(this::mergeWithCustomDb);
+    public WorkItemDto getWorkItem(String wobNum) {
+        WorkItemDto item = icmWorkQueue.get(wobNum);
+        return item != null ? mergeWithCustomDb(item) : null;
     }
 
-    public Optional<WorkItemDto> getCaseById(String caseId) {
-        return icmWorkQueue.values().stream()
-                .filter(w -> caseId.equals(w.getCaseId()) || caseId.equals(w.getLcReference()))
-                .findFirst()
-                .map(this::mergeWithCustomDb);
+    public WorkItemDto getCaseById(String caseId) {
+        for (WorkItemDto item : icmWorkQueue.values()) {
+            if (caseId.equals(item.getCaseId()) || caseId.equals(item.getLcReference())) {
+                return mergeWithCustomDb(item);
+            }
+        }
+        return null;
     }
 
     private WorkItemDto mergeWithCustomDb(WorkItemDto item) {
@@ -211,7 +217,7 @@ public class IcmCaseGatewayService {
             }
         }
 
-        String now = TS_FMT.format(LocalDateTime.now());
+        String now = nowTimestamp();
         if (icmCount > 0) {
             item.getAuditTrail().add(0, new AuditEntryDto(
                     "a-" + System.currentTimeMillis() + "-icm",
@@ -232,11 +238,11 @@ public class IcmCaseGatewayService {
 
     @Transactional
     public CompleteStepResponse completeStep(String wobNum, CompleteStepRequest req) {
-        WorkItemDto item = saveFields(wobNum, req.fieldValues(), req.actor());
-        icmCaseCreationService.dispatchWorkflowStep(wobNum, req.outcome());
+        WorkItemDto item = saveFields(wobNum, req.getFieldValues(), req.getActor());
+        icmCaseCreationService.dispatchWorkflowStep(wobNum, req.getOutcome());
 
         String previousBasket = item.getInBasketId();
-        String outcome = req.outcome();
+        String outcome = req.getOutcome();
         if (outcome.toLowerCase().contains("return") || outcome.toLowerCase().contains("maker")) {
             item.setInBasketId("lc-maker");
             item.setStepName("Maker Correction");
@@ -251,17 +257,20 @@ public class IcmCaseGatewayService {
 
         item.getAuditTrail().add(0, new AuditEntryDto(
                 "a-" + System.currentTimeMillis() + "-disp",
-                TS_FMT.format(LocalDateTime.now()),
-                req.actor(),
+                nowTimestamp(),
+                req.getActor(),
                 "Trade User",
                 "Step Completed: " + outcome,
-                req.reason() != null ? req.reason() : "Dispatched via ICM Work API",
+                req.getReason() != null ? req.getReason() : "Dispatched via ICM Work API",
                 "IBM ICM"));
 
-        WorkItemDto next = icmWorkQueue.values().stream()
-                .filter(w -> !w.getWobNum().equals(wobNum) && previousBasket.equals(w.getInBasketId()))
-                .findFirst()
-                .orElse(null);
+        WorkItemDto next = null;
+        for (WorkItemDto candidate : icmWorkQueue.values()) {
+            if (!candidate.getWobNum().equals(wobNum) && previousBasket.equals(candidate.getInBasketId())) {
+                next = candidate;
+                break;
+            }
+        }
 
         return new CompleteStepResponse(wobNum, item, next);
     }
@@ -272,33 +281,37 @@ public class IcmCaseGatewayService {
         item.setAssignedTo(targetUser);
         item.getAuditTrail().add(0, new AuditEntryDto(
                 "a-" + System.currentTimeMillis() + "-re",
-                TS_FMT.format(LocalDateTime.now()),
+                nowTimestamp(),
                 actor, "Trade User", "Work Item Reassigned",
                 "Reassigned to " + targetUser, "IBM ICM"));
         return mergeWithCustomDb(item);
     }
 
     public WorkItemDto updateDocumentStatus(String caseId, String docId, DocumentStatusRequest req) {
-        WorkItemDto item = getCaseById(caseId)
-                .orElseThrow(() -> new IllegalArgumentException("Case not found: " + caseId));
-        item.getDocuments().stream()
-                .filter(d -> d.getId().equals(docId))
-                .findFirst()
-                .ifPresent(d -> {
-                    d.setVerificationStatus(req.verificationStatus());
-                    d.setDiscrepancyNote(req.discrepancyNote());
-                });
+        WorkItemDto item = getCaseById(caseId);
+        if (item == null) {
+            throw new IllegalArgumentException("Case not found: " + caseId);
+        }
+        for (IcmDocumentDto doc : item.getDocuments()) {
+            if (doc.getId().equals(docId)) {
+                doc.setVerificationStatus(req.getVerificationStatus());
+                doc.setDiscrepancyNote(req.getDiscrepancyNote());
+                break;
+            }
+        }
         return item;
     }
 
     public WorkItemDto addComment(String caseId, CommentRequest req) {
-        WorkItemDto item = getCaseById(caseId)
-                .orElseThrow(() -> new IllegalArgumentException("Case not found: " + caseId));
+        WorkItemDto item = getCaseById(caseId);
+        if (item == null) {
+            throw new IllegalArgumentException("Case not found: " + caseId);
+        }
         item.getComments().add(0, new CommentDto(
                 "c-" + System.currentTimeMillis(),
-                req.actor(), req.role(),
-                TS_FMT.format(LocalDateTime.now()),
-                req.message(), "NOTE"));
+                req.getActor(), req.getRole(),
+                nowTimestamp(),
+                req.getMessage(), "NOTE"));
         return item;
     }
 
@@ -350,8 +363,8 @@ public class IcmCaseGatewayService {
         w.setInQueueLabel("1d 10h");
         w.setStatus("Pending Checker Approval");
         w.setLinkedCasesCount(1);
-        w.setStepOutcomes(List.of("Approve & Release MT700", "Return to Maker for Correction", "Refer to Sanctions / TBML", "Reject Application"));
-        w.setStages(List.of(
+        w.setStepOutcomes(Arrays.asList("Approve & Release MT700", "Return to Maker for Correction", "Refer to Sanctions / TBML", "Reject Application"));
+        w.setStages(Arrays.asList(
                 new WorkflowStageDto("s1", "Intake & Limit Block", "completed", "Trade Portal", "18 Nov 09:15"),
                 new WorkflowStageDto("s2", "LC Maker Draft", "completed", "Priya Nair", "20 Nov 11:28"),
                 new WorkflowStageDto("s3", "4-Eyes Checker", "active", null, null),
@@ -379,13 +392,13 @@ public class IcmCaseGatewayService {
                 "Pending",
                 null,
                 fileNetDocumentService.buildDaejaViewerUrl("DOC-MT700-418"),
-                Map.of("lcReference", w.getLcReference()),
-                List.of(new DocSectionDto("MT700 Header", List.of(
+                Collections.singletonMap("lcReference", w.getLcReference()),
+                Collections.singletonList(new DocSectionDto("MT700 Header", Arrays.asList(
                         new DocRowDto(":20: Documentary Credit No.", w.getLcReference(), "lcReference"),
                         new DocRowDto(":32B: Amount", w.getAmountFormatted(), "lcAmount")
                 )))
         );
-        w.setDocuments(new ArrayList<>(List.of(doc)));
+        w.setDocuments(new ArrayList<>(Collections.singletonList(doc)));
         w.setComments(new ArrayList<>());
         w.setTasks(new ArrayList<>());
         w.setRelatedCases(new ArrayList<>());
@@ -413,5 +426,20 @@ public class IcmCaseGatewayService {
         f.setReadOnly(readOnly);
         f.setAttention(attention);
         return f;
+    }
+
+    private String nowTimestamp() {
+        return new SimpleDateFormat(TS_PATTERN).format(new Date());
+    }
+
+    private String joinWithComma(List<String> values) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < values.size(); i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(values.get(i));
+        }
+        return sb.toString();
     }
 }
