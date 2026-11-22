@@ -200,7 +200,7 @@ public class IcmCaseCreationService {
                         actor,
                         "Intake Officer",
                         "IBM ICM Case Created (WID " + wid + ")",
-                        "Created in IBM Case Manager (" + icmMode + ") and routed to "
+                        "Created in IBM Case Manager (" + icmProps.getMode() + ") and routed to "
                                 + roleConfig.getRoleName() + " [" + roleConfig.getInBasketId() + "]",
                         "IBM ICM")
         )));
@@ -209,14 +209,14 @@ public class IcmCaseCreationService {
     }
 
     public void updateIcmCaseProperty(String caseId, String symbolicName, String value) {
-        if ("LIVE_FILENET".equalsIgnoreCase(icmMode)) {
+        if (sessionManager.isLiveMode()) {
             // LIVE: Case.fetchInstance(...) -> caseInstance.getProperties().putObjectValue(symbolicName, value);
             log.debug("[LIVE_FILENET] Updated ICM Case {} property {}={}", caseId, symbolicName, value);
         }
     }
 
     public void dispatchWorkflowStep(String wobNum, String outcome) {
-        if ("LIVE_FILENET".equalsIgnoreCase(icmMode)) {
+        if (sessionManager.isLiveMode()) {
             // LIVE: VWSession.fetchWorkObject(wobNum) -> setSelectedResponse(outcome) -> doDispatch();
             log.debug("[LIVE_FILENET] Dispatched WOB {} with outcome {}", wobNum, outcome);
         }
