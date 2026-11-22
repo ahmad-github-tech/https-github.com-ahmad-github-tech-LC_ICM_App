@@ -29,7 +29,7 @@ All connection parameters in `src/main/resources/application.properties` bind to
   - Edit `src/main/resources/case-intake.properties` (or override `intake.config.path=file:/opt/tradeflow/case-intake.properties`) to add/remove fields, toggle `required=true/false`, change `ICM` vs `CUSTOM_DB`, or change Maker role routing.
 
 ## 3. Run in STS / Deploy to Tomcat
-1. Right-click `LcCaseManagerApplication.java` -> **Run As -> Spring Boot App** (or build `target/meridian-lc-casemanager.war` for Apache Tomcat).
+1. Right-click `LcCaseManagerApplication.java` -> **Run As -> Spring Boot App** (or build `target/meridian-lc-casemanager-services.war` for Apache Tomcat).
 2. Endpoints:
    - React REST API: `http://localhost:8080/api/icm/workitems` & `http://localhost:8080/api/icm/cases`
    - Configurable Intake Schema: `http://localhost:8080/api/icm/intake-config`

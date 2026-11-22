@@ -12,11 +12,11 @@
     </parent>
 
     <groupId>com.tradefinance</groupId>
-    <artifactId>meridian-lc-casemanager</artifactId>
+    <artifactId>meridian-lc-casemanager-services</artifactId>
     <version>1.0.0</version>
     <packaging>war</packaging>
-    <name>Meridian TradeFlow LC Case Manager</name>
-    <description>Spring Boot 3.2.5 WAR backend for Letter of Credit Case Manager (IBM ICM + MySQL Custom DB)</description>
+    <name>Meridian LC Case Manager Services</name>
+    <description>Spring Boot 3.2.5 WAR backend services for Letter of Credit Case Manager (IBM ICM + MySQL Custom DB)</description>
 
     <properties>
         <java.version>17</java.version>
@@ -88,7 +88,7 @@
     </dependencies>
 
     <build>
-        <finalName>meridian-lc-casemanager</finalName>
+        <finalName>meridian-lc-casemanager-services</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
