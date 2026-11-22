@@ -7,8 +7,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -18,16 +18,24 @@ import org.springframework.stereotype.Service;
  *  - Creating/initializing the Case at the configured Maker Stage & In-Basket (e.g. TF_LC_MAKER / lc-maker)
  *  - Updating ICM symbolic properties and dispatching workflow outcomes via Process Engine
  */
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class IcmCaseCreationService {
 
+    private static final Logger log = LoggerFactory.getLogger(IcmCaseCreationService.class);
     private static final DateTimeFormatter TS_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private final IcmProperties icmProps;
     private final FileNetProperties fileNetProps;
     private final FileNetSessionManager sessionManager;
+
+    public IcmCaseCreationService(
+            IcmProperties icmProps,
+            FileNetProperties fileNetProps,
+            FileNetSessionManager sessionManager) {
+        this.icmProps = icmProps;
+        this.fileNetProps = fileNetProps;
+        this.sessionManager = sessionManager;
+    }
 
     public record IcmCreationResult(
             String wid,

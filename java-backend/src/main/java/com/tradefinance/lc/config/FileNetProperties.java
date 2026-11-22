@@ -1,6 +1,5 @@
 package com.tradefinance.lc.config;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -8,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
  * Strongly-typed configuration properties for IBM FileNet Content Engine (CE).
  * Populated from filenet.* properties in application.properties / environment variables.
  */
-@Data
 @Configuration
 @ConfigurationProperties(prefix = "filenet")
 public class FileNetProperties {
@@ -42,4 +40,84 @@ public class FileNetProperties {
 
     /** Connection timeout in milliseconds */
     private int connectionTimeoutMs = 30000;
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getStanza() {
+        return stanza;
+    }
+
+    public void setStanza(String stanza) {
+        this.stanza = stanza;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public String getTargetObjectStore() {
+        return targetObjectStore;
+    }
+
+    public void setTargetObjectStore(String targetObjectStore) {
+        this.targetObjectStore = targetObjectStore;
+    }
+
+    public String getDesignObjectStore() {
+        return designObjectStore;
+    }
+
+    public void setDesignObjectStore(String designObjectStore) {
+        this.designObjectStore = designObjectStore;
+    }
+
+    public String getCaseFolderRoot() {
+        return caseFolderRoot;
+    }
+
+    public void setCaseFolderRoot(String caseFolderRoot) {
+        this.caseFolderRoot = caseFolderRoot;
+    }
+
+    public String getDefaultDocumentClass() {
+        return defaultDocumentClass;
+    }
+
+    public void setDefaultDocumentClass(String defaultDocumentClass) {
+        this.defaultDocumentClass = defaultDocumentClass;
+    }
+
+    public int getConnectionTimeoutMs() {
+        return connectionTimeoutMs;
+    }
+
+    public void setConnectionTimeoutMs(int connectionTimeoutMs) {
+        this.connectionTimeoutMs = connectionTimeoutMs;
+    }
 }

@@ -2,8 +2,8 @@ package com.tradefinance.lc.service;
 
 import com.tradefinance.lc.config.FileNetProperties;
 import com.tradefinance.lc.config.IcmProperties;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -11,13 +11,18 @@ import org.springframework.stereotype.Service;
  * Centralizes CE Connection, JAAS UserContext Subject, Target ObjectStore,
  * and Process Engine VWSession using FileNetProperties & IcmProperties.
  */
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class FileNetSessionManager {
+
+    private static final Logger log = LoggerFactory.getLogger(FileNetSessionManager.class);
 
     private final FileNetProperties fileNetProps;
     private final IcmProperties icmProps;
+
+    public FileNetSessionManager(FileNetProperties fileNetProps, IcmProperties icmProps) {
+        this.fileNetProps = fileNetProps;
+        this.icmProps = icmProps;
+    }
 
     public boolean isLiveMode() {
         return "LIVE_FILENET".equalsIgnoreCase(icmProps.getMode());

@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,10 +13,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/icm")
-@RequiredArgsConstructor
 public class IcmWorkController {
 
     private final IcmCaseGatewayService gatewayService;
+
+    public IcmWorkController(IcmCaseGatewayService gatewayService) {
+        this.gatewayService = gatewayService;
+    }
 
     /**
      * Loads role routing, configurable intake fields (from case-intake.properties),

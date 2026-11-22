@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
  *  - FileNetDocumentService (FileNet CE multi-document upload & case filing)
  */
 @Service
-@RequiredArgsConstructor
 public class IcmCaseGatewayService {
 
     private static final DateTimeFormatter TS_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
@@ -30,6 +28,19 @@ public class IcmCaseGatewayService {
     private final CustomIntakeService customIntakeService;
     private final IcmCaseCreationService icmCaseCreationService;
     private final FileNetDocumentService fileNetDocumentService;
+
+    public IcmCaseGatewayService(
+            IcmProperties icmProps,
+            IntakeConfigPropertiesService intakeConfigService,
+            CustomIntakeService customIntakeService,
+            IcmCaseCreationService icmCaseCreationService,
+            FileNetDocumentService fileNetDocumentService) {
+        this.icmProps = icmProps;
+        this.intakeConfigService = intakeConfigService;
+        this.customIntakeService = customIntakeService;
+        this.icmCaseCreationService = icmCaseCreationService;
+        this.fileNetDocumentService = fileNetDocumentService;
+    }
 
     private final Map<String, WorkItemDto> icmWorkQueue = new ConcurrentHashMap<>();
     private final List<InBasketDto> inBaskets = new ArrayList<>();

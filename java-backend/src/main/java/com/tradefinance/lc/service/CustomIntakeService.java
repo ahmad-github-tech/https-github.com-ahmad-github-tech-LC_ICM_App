@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
  * Intentionally decoupled from IBM Case Manager and FileNet Content Engine APIs.
  */
 @Service
-@RequiredArgsConstructor
 public class CustomIntakeService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -36,6 +34,15 @@ public class CustomIntakeService {
     private final CustomDbProperties customDbProps;
     private final CaseIntakeRepository caseIntakeRepository;
     private final CustomLcFieldRepository customFieldRepository;
+
+    public CustomIntakeService(
+            CustomDbProperties customDbProps,
+            CaseIntakeRepository caseIntakeRepository,
+            CustomLcFieldRepository customFieldRepository) {
+        this.customDbProps = customDbProps;
+        this.caseIntakeRepository = caseIntakeRepository;
+        this.customFieldRepository = customFieldRepository;
+    }
 
     /**
      * Generates a unique numeric WID of the configured digit length (default 6 digits: 100000-999999).

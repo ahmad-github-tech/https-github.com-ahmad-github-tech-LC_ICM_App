@@ -2,7 +2,7 @@
 
 This folder (`java-backend/`) matches your enterprise Java stack:
 - **Java 17** + **Maven** (`<packaging>war</packaging>` for Tomcat)
-- **Spring Boot 3.2.5** (`web`, `thymeleaf`, `data-jpa`, `validation`, `lombok`)
+- **Spring Boot 3.2.5** (`web`, `thymeleaf`, `data-jpa`, `validation` — pure Java constructors/getters/SLF4J, no IDE Lombok plugin required)
 - **MySQL Custom DB** with HikariCP pooling & JPA/Hibernate auto table creation (`tf_lc_custom_fields`, `tf_lc_case_intake`)
 - **Clean Service Separation**:
   - `FileNetSessionManager` + `FileNetDocumentService` (FileNet P8 CE & Case Folder Filing)
@@ -14,7 +14,6 @@ This folder (`java-backend/`) matches your enterprise Java stack:
 1. Open **Spring Tool Suite (STS)**.
 2. Click **File -> Import -> Maven -> Existing Maven Projects**.
 3. Select the `java-backend/` folder and click **Finish**.
-4. Ensure Lombok annotation processing is enabled in STS if needed.
 
 ## 2. Configure MySQL, FileNet P8 & IBM Case Manager (`application.properties`)
 All connection parameters in `src/main/resources/application.properties` bind to strongly-typed `@ConfigurationProperties` beans (`CustomDbProperties`, `FileNetProperties`, `IcmProperties`) and support OS environment variables:

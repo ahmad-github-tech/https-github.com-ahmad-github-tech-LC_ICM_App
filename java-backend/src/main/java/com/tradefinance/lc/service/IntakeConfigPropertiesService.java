@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -21,13 +20,16 @@ import org.springframework.stereotype.Service;
  * in the properties file requires zero code changes.
  */
 @Service
-@RequiredArgsConstructor
 public class IntakeConfigPropertiesService {
 
     private final ResourceLoader resourceLoader;
 
     @Value("${intake.config.path:classpath:case-intake.properties}")
     private String intakeConfigPath;
+
+    public IntakeConfigPropertiesService(ResourceLoader resourceLoader) {
+        this.resourceLoader = resourceLoader;
+    }
 
     public Properties loadRawProperties() {
         try {

@@ -11,8 +11,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -22,16 +22,24 @@ import org.springframework.stereotype.Service;
  *  - Filing documents into the IBM ICM Case Folder (ReferentialContainmentRelationship)
  *  - Building Daeja ViewONE viewer URLs for embedded rendering
  */
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class FileNetDocumentService {
 
+    private static final Logger log = LoggerFactory.getLogger(FileNetDocumentService.class);
     private static final DateTimeFormatter TS_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private final FileNetProperties fileNetProps;
     private final IcmProperties icmProps;
     private final FileNetSessionManager sessionManager;
+
+    public FileNetDocumentService(
+            FileNetProperties fileNetProps,
+            IcmProperties icmProps,
+            FileNetSessionManager sessionManager) {
+        this.fileNetProps = fileNetProps;
+        this.icmProps = icmProps;
+        this.sessionManager = sessionManager;
+    }
 
     /**
      * Uploads and files one or multiple documents into the IBM ICM Case folder inside FileNet CE.
